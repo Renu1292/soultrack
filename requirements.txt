@@ -6,7 +6,7 @@ Flask-Migrate==4.0.4
 SQLAlchemy==2.0.21
 WTForms==3.0.1
 Werkzeug==2.3.7
-weasyprint==59.5
+weasyprint==66.0
 huggingface-hub==0.16.4
 python-dotenv==1.0.0
 gunicorn==21.2.0
