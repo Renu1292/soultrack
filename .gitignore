@@ -1,0 +1,25 @@
+# 🔹 Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.so
+
+# 🔹 Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# 🔹 Environment & secrets
+.env
+*.env
+
+# 🔹 IDE/Editor
+.idea/
+.vscode/
+
+# 🔹 OS junk
+.DS_Store
+Thumbs.db
