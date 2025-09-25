@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Productivity Analysis</title>\
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <h2 class="fw-bold text-center mb-4">📊 Your Productivity Analysis</h2>
+    <p class="text-center text-muted">You've logged <strong>{{ total_sessions }}</strong> sessions.</p>
+
+    <!-- Line Chart for Hours -->
+    <div class="mb-5">
+        <h5 class="text-primary">Logged Hours over Time</h5>
+        <canvas id="hoursChart" height="100"></canvas>
+    </div>
+
+    <div class="row text-center mb-4">
+        <div class="col">
+            <div class="card shadow-sm p-3">
+                <h6 class="text-muted">Total Hours Logged</h6>
+                <p class="fs-4 fw-bold text-primary">{{ total_hours }}</p>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card shadow-sm p-3">
+                <h6 class="text-muted">Avg Hours/Day</h6>
+                <p class="fs-4 fw-bold text-success">{{ avg_hours }}</p>
+            </div>
+        </div>
+          <div class="col">
+            <div class="card shadow-sm p-3">
+                <h6 class="text-muted">Sessions Logged</h6>
+                <p class="fs-4 fw-bold text-info">{{ session_count }}</p>
+            </div>
+        </div>
+    </div>
+
+      <!-- Pie Chart for Mood -->
+    <div class="mb-5" style="position:relative; width:100%; min-height:300px;">
+      <h5 class="text-success">Mood Distribution</h5>
+      <canvas id="moodChart"
+              style="display:block; width:100%; height:auto;max-height:500px; aspect-ratio:1/1; margin-auto;">
+      </canvas>
+    </div>
+
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    <a href="{{ url_for('weekly_summary') }}" class="btn btn-secondary">Weekly Summary</a>
+  </div>
+
+  <script>
+    const dates = {{ dates|tojson }};
+    const hours = {{ hours|tojson }};
+    const moodData = {{ mood_counts|tojson }};
+
+    // Line Chart for Hours
+    new Chart(document.getElementById("hoursChart"), {
+      type: "line",
+      data: {
+        labels: dates.map(date => new Date(date).toLocaleDateString('en-GB', {
+          day:'2-digit',
+          month: 'short'
+        })),
+        datasets: [{
+          label: "Hours Logges",
+          data: hours,
+          backgroundColor: "rgba(75,192,192,0.2)",
+          borderColor: "#4bc0c0",
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        scales: {
+          y: {beginAtZero: true }
+        }
+      }
+    });
+
+    // Pie Chart for Mood
+    new Chart(document.getElementById("moodChart"), {
+      type: "pie",
+      data: {
+          labels: Object.keys(moodData), // Mood names from data
+          datasets: [{
+              label: "Mood",
+              data: Object.values(moodData), // Mood frequency counts
+              backgroundColor: ["#8B4513", "#A0522D", "#D2691E", "#CD853F", "#F4A460", "#DEB887", "#D2B48C", "#BC8F8F"]
+          }]
+      },
+      options: {
+        responsive: true, // Makes chart adapt to container size
+        maintainAspectRatio: false, // Allows custom dimensions
+
+        plugins: {
+          // LEGEND CONFIG
+          legend : {
+            position: 'right', // Moves legend to right size
+            labels: {
+                boxWidth: 20, // Colour box size
+                padding: 15, // Spacing between legend items
+                font: {
+                    size: 12 // Legend text size
+                }
+            }
+          },
+
+          // DATA LABEL CONFIG [Percentage Value]
+          datalabels: {
+            display: function(context) {
+                // Only show labels for significant slices(>5%)
+                const dataset = context.chart.data.datasets[0];
+                const total = dataset.data.reduce((a, b) => a + b, 0);
+                return (dataset.data[context.dataIndex] / total) > 0.03; // 3% threshold
+            },
+            formatter: (value, ctx) => {
+                // Format as rounded percentage
+                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                return Math.round((value / total) * 100) + '%';
+            },
+            color: '#333', // Dark gray for contrast
+            font: {
+                weight: 'bold',
+                size: 14 // Larger font for readability
+            },
+            padding: 6 // Space around labels
+          },
+
+          // TOOLTIP CONFIG (appears on hover)
+          tooltip: {
+            callbacks: {
+                label: function(context) {
+                    //Shows mood name, count and percentage on hover
+                    const label = context.label || '';
+                    const value = context.raw || 0;
+                    const total = context.dataset.data.reduce((a,b) => a + b, 0);
+                    const percentage = Math.round((value / total) * 100);
+                    return `${label}: ${value} (${percentage}%)`;
+                }
+            }
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+  </script>
+</body>
+</html>

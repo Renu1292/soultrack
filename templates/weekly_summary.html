@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Weekly Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .card-text-label{
+            color: #9C0824;
+            font-weight:600;
+        }
+
+        .info-text-label{
+            color: #7B3014;
+            font-weight:600;
+        }
+    </style>
+
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <h2 class="fw-bold text-center mb-4">📊 Your Weekly Summary</h2>
+
+     {% if burnout_message %}
+      <div class="alert alert-warning text-center fw-semibold fs-5 mb-4" role="alert">
+           {{ burnout_message }}
+      </div>
+      {% endif %}
+
+      <!-- Call Out My BS Section -->
+    {% if USE_AI %}
+        {% if excuses %}
+        <div class="card mt-4 shadow-sm p-3" style="border-left:5px solid #8A2D3B; background-color:#fffaf5;">
+            <h5 class="fw-bold text-danger mb-2">🚫 Excuses Detected</h5>
+            <ul class="mb-2">
+                {% for excuse in excuses %}
+                    <li>{{ excuse }}</li>
+                {% endfor %}
+            </ul>
+            <p class="text-muted small">Your progress deserves better than these.</p>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-warning text-center fw-semibold fs-5 mb-4">
+            🧪 Excuse detection is currently in mock mode. Log in later to receive full analysis.
+        </div>
+    {% endif %}
+
+
+     <!-- Weekly Consistency Section -->
+      <div class="card p-3 mt-4 mb-4 shadow-sm" style="border-left: 5px solid #D16727; background-color:#fffaf5;">
+            <h5 class="fw-bold mb-3 text-center">🗓️ 7-Day Logging Consistency</h5>
+            <div class="d-flex justify-content-between text-center small fw-bold">
+                {% for i in range(7) %}
+                    <div class="flex-fill">
+                         <div class="p-2 rounded-circle mx-auto mb-1"
+                            style="width:40px; height:40px;
+                                   background-color: {{ 'mediumseagreen' if days_status[i] else '#eee' }};
+                                   color: {{ 'white' if days_status[i] else '#aaa' }};
+                                   display: flex; align-items: center; justify-content: center;">
+                            {{ week_dates[i].strftime('%a')[0] }}
+                         </div>
+                         <div style="font-size: 0.75rem;">{{ week_dates[i].strftime('%b %d') }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+            <p class="text-muted text-center mt-3 mb-0" style="font-size: 0.9rem;">
+               You logged on {{ days_status | select('true') | list | length }} out of 7 days.
+            </p>
+      </div>
+
+    <!-- SUMMARY CARDS - 4-column layout -->
+    <div class="row text-center mb-4">
+        <!-- Card 1 : Total Hours -->
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm h-100 p-3">
+                <h5 class="card-text-label fs-5">Total Hours Logged</h5>
+                <p class="info-text-label fs-2">{{ total_hours }}</p>
+            </div>
+        </div>
+
+        <!-- Card 2: Avg Hours -->
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm h-100 p-3">
+                <h5 class="card-text-label fs-5">Avg Hours/Day</h5>
+                <p class="info-text-label fs-2">{{ avg_hours }}</p>
+            </div>
+        </div>
+
+        <!-- Card 3: Session -->
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm h-100 p-3">
+                <h5 class="card-text-label fs-5">Sessions Logged</h5>
+                <p class="info-text-label fs-2">{{ session_count }}</p>
+            </div>
+        </div>
+
+        <!-- Card 4: Productivity -->
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm h-100 p-3">
+                <h5 class="card-text-label fs-5">Productivity Peaks</h5>
+                <p class="info-text-label fs-5">🔥🔥:{{ most_productive_day }} ({{ most_productive_hours }} hrs) </p>
+                <p class="info-text-label fs-5">🐢🐢: {{ least_productive_day }} ({{ least_productive_hours }} hrs) </p>
+            </div>
+        </div>
+    </div>
+
+     <!-- Productivity Health Card - Standout Section -->
+     <div class="row text-center mb-4">
+        <div class="col-md-6 offset-md-3 mb-3">
+            <div class="card shadow-lg h-100 p-3" style="background-color: #e3f2fd; border-left: 5px solid #1976d2;">
+                <div class="d-flex justify-content-between align-items-center">
+                     <h5 class="card-text-label fs-4 mb-0">🎯 Productivity Health Score:</h5>
+                     <span class="badge bg-white text-success fs-6">HEALTH SCORE</span>
+                </div>
+                <p class="info-text-label display-5 fw-bold my-2">{{ productivity_score }}</p>
+                    {% if productivity_score >= 90 %}
+                        <span class="text-success fs-bold fs-5"> 🌟 Excellent</span>
+                    {% elif productivity_score >= 75 %}
+                        <span class="text-primary fs-bold fs-5"> ✅ Healthy</span>
+                    {% elif productivity_score >= 60 %}
+                        <span class="text-warning fs-bold fs-5"> ⚠️ Needs Attention</span>
+                   {% elif productivity_score >= 40 %}
+                        <span class="text-warning fs-bold fs-5"> 🚨 At Risk</span>
+                    {% else %}
+                        <span class="text-danger fs-bold fs-5">🔻Critical </span>
+                    {% endif %}
+
+                    <!-- Button to toggle breakdown -->
+                    <button class="btn btn-sm btn-link mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#scoreBreakdown">
+                        Show Breakdown ▼
+                    </button>
+
+                    <!-- Collapsible breakdown [collapsible with progress bar) -->
+                    <div class="collapse mt-3" id="scoreBreakdown">
+                        {% set max_points = {"hours": 25, "consistency": 15, "goal": 20, "mood": 20, "burnout": 15} %}
+                        <p class="text-muted small mt-2">
+                            Your Productivity Health Score starts at <strong>50</strong>.
+                            The breakdown above shows how many bonus points you earned this week.
+                        </p>
+
+                        <!-- Hours Logged -->
+                        <div class="mb-3">
+                            <p class="small mb-1">⏱️ Hours Logged</p>
+                            <div class="progress" style="height:28px; position:relative;">
+                                <div class="progress-bar bg-info"
+                                     role="progressbar"
+                                     style="width: {{ (breakdown.get('hours',0) / max_points.hours * 100) | round(1) }}%;"
+                                     aria-valuenow="{{  breakdown.get('hours',0) }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="{{ max_points.hours}}">
+                                     <span style="color: #333; font-size: 14px; font-weight: 600 " >
+                                           <!-- Show percentage inside bar -->
+                                           ({{ breakdown.get('hours',0) }}/{{ max_points.hours }}pts)
+                                     </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Consistency -->
+                        <div class="mb-3">
+                            <p class="small mb-1">📆 Consistency</p>
+                            <div class="progress" style="height:24px;">
+                                <div class="progress-bar bg-primary"
+                                     role="progressbar"
+                                     style="width: {{ (breakdown.get('consistency',0) / max_points.consistency * 100) | round(1) }}%;"
+                                     aria-valuenow="{{ breakdown.get('consistency',0) }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="{{ max_points.consistency}}">
+                                     <span style="color: #333; font-size: 14px; font-weight: 600">
+                                          <!-- Show percentage inside bar -->
+                                           ({{ breakdown.get('consistency',0) }}/{{ max_points.consistency }}pts)
+                                     </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Goal Progress -->
+                        <div class="mb-3">
+                            <p class="small mb-1">🎯 Goal Progress</p>
+                            <div class="progress" style="height:24px;">
+                                <div class="progress-bar bg-success"
+                                     role="progressbar"
+                                     style="width: {{ (breakdown.get('goal',0) / max_points.goal * 100) | round(1) }}%;"
+                                     aria-valuenow="{{ breakdown.get('goal',0) }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="{{ max_points.goal }}">
+                                     <span style="color: #333; font-size: 14px; font-weight: 600">
+                                          <!-- Show percentage inside bar -->
+                                          ({{ breakdown.get('goal',0) }}/{{ max_points.goal }}pts)
+                                     </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mood Quality -->
+                        <div class="mb-3">
+                            <p class="small mb-1">😊 Mood Quality</p>
+                            <div class="progress" style="height:24px;">
+                                <div class="progress-bar bg-warning"
+                                     role="progressbar"
+                                     style="width: {{ (breakdown.get('mood',0) / max_points.mood * 100) | round(1) }}%;"
+                                     aria-valuenow= "{{ breakdown.get('mood',0) }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="{{ max_points.mood }}">
+                                     <span style="color: #333; font-size: 14px; font-weight: 600">
+                                        <!-- Show percentage inside bar -->
+                                        ({{ breakdown.get('mood',0) }}/{{ max_points.mood }}pts)
+                                     </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Burnout Impact -->
+                        <div class="mb-3">
+                            <p class="small mb-1">🔥 Burnout Impact</p>
+                            <div class="progress" style="height:24px;">
+                                <div class="progress-bar bg-warning"
+                                     role="progressbar"
+                                     style="width: {{ (breakdown.get('burnout',0) / max_points.burnout * 100) | abs | round(1) }}%;"
+                                     aria-valuenow="{{ breakdown.get('burnout',0) }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="{{ max_points.burnout }}">
+                                     <span style="color: #333; font-size: 14px; font-weight: 600">
+                                         <!-- Show percentage inside bar -->
+                                         ({{ breakdown.get('burnout',0) }}/{{ max_points.burnout }}pts)
+
+                                     </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if not productivity_score %}
+                        <p class="text-muted mt-3 mb-0 text-center">Not enough data to generate a productivity score this week.</p>
+                    {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Goal Card - Standout Section -->
+    <div class="row text-center mb-4">
+        <div class="col-md-6 offset-md-3 mb-3">
+            <div class="card shadow-lg h-100 p-3" style="background-color: #e8f5e9; border-left: 5px solid #2e7d32;">
+                <div class="d-flex justify-content-between align-items-center">
+                     <h5 class="card-text-label fs-4 mb-0">🎯 Next Week's Goal:</h5>
+                     <span class="badge bg-white text-success fs-6">ACTION</span>
+                </div>
+                <p class="info-text-label display-5 fw-bold my-2">{{ suggested_goal }} hrs</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Buttons -->
+     <div class="d-flex justify-content-center gap-3 mb-5 mt-4">
+        {% if current_date == week_end %}
+            <button class="btn btn-outline-primary" id="getInsightBtn">🧠 Get Weekly AI Insight</button>
+        {% else %}
+            <button class="btn btn-outline-primary" disabled title="Weekly summary is available at the end of the week">🧠 Get Weekly AI Insight (Available Sunday)</button >
+        {% endif %}
+
+         <a href="{{ url_for('refresh_summary') }}" class="btn btn-outline-warning">🔄 Update Summary After Recent Changes</a>
+
+     </div>
+
+    <!-- Hours Chart -->
+    <div class="card p-3 mb-4 shadow-sm" style="border-left: 4px solid #D16727;">
+        <h5 class="card-text-label fs-5 text-center">Logged Hours over Time</h5>
+        <canvas id="hoursChart" height="200"></canvas>
+    </div>
+
+      <!-- Mood Chart -->
+    <div class="card p-3 mb-4 shadow-sm" style="border-left: 4px solid #8C5A4A;">
+      <h5 class="card-text-label fs-5 text-center mb-3">Mood Distribution</h5>
+      <canvas id="moodChart" height="200"></canvas>
+    </div>
+  </div>
+
+    <a href="{{ url_for('summary_history') }}" class="btn btn-secondary"> Analysis History </a>
+    <a href="{{ url_for('analysis') }}" class="btn btn-secondary">Back to Productivity</a>
+    <a href="{{ url_for('export_summary') }}" class="btn btn-secondary">📥 Export as PDF</a>
+
+     <!-- AI Insight Modal -->
+     <div class="modal fade" id="aiInsightModal" tabindex="-1" aria-labelledby="aiInsightLabel" role="dialog">
+         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+             <div class="modal-content shadow">
+                 <div class="modal-header">
+                     <h5 class="modal-title fw-bold" id="aiInsightLabel">🧠 Weekly AI Insight</h5>
+                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                 </div>
+                  <div class="modal-body">
+                      <p style="white-space: pre-wrap;">{{ ai_feedback }}</p>
+                  </div>
+             </div>
+         </div>
+     </div>
+    <script>
+    const dates = {{ dates|tojson }};
+    const hours = {{ hours|tojson }};
+    const moodData = {{ mood_counts|tojson }};
+
+    // Create gradient
+    const ctx = document.getElementById('hoursChart').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(209, 103, 39, 0.7)'); // Top Color
+    gradient.addColorStop(1, 'rgba(209, 102, 39, 0.3)'); // Bottom Color
+
+    // Bar Chart for Hours
+    new Chart(document.getElementById("hoursChart"), {
+      type: "bar",
+      data: {
+        labels: dates.map(date => new Date(date).toLocaleDateString('en-GB', {
+          day:'2-digit',
+          month: 'short'
+        })),
+        datasets: [{
+          label: "Hours Worked",
+          data: hours,
+          backgroundColor: gradient,
+          borderColor: "#D16727",
+          borderWidth: 1,
+          borderRadius: 4,
+          hoverBackgroundColor: 'rgba(209, 103, 39, 0.8)'
+        }]
+      },
+      options: {
+        indexAxis: 'x',
+        responsive: true,
+        scales: {
+            x: {
+             grid: { display: false },
+             ticks: {
+                font: {
+                    size: 12
+                }
+             }
+            },
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: "rgba(0,0,0,0.05)",
+                drawBorder: false
+              },
+              ticks: {
+                font: {
+                    size: 12
+                },
+                stepSize: 1
+              }
+            }
+        },
+        plugins: {
+            legend: { display: false },
+            datalabels: {
+                anchor: 'end',
+                align: 'top',
+                color: "#5A4A3A",
+
+                formatter: function(value) {
+                    return value;
+                }
+            }
+        },
+        layout: {
+            padding: {
+                top: 10,
+                bottom: 10,
+                left: 10,
+                right: 10
+            }
+        }
+      },
+      plugins : [ChartDataLabels]
+    });
+
+    // Bar Chart for Mood
+    new Chart(document.getElementById("moodChart"), {
+      type: "bar",
+      data: {
+          labels: Object.keys(moodData),
+          datasets: [{
+              label: "Mood",
+              data: Object.values(moodData),
+              backgroundColor: [
+                "#D16727",
+                "#E38B5C",
+                "#EEAA8A",
+                "#F5C9B3",
+                "#FBE8DD"
+              ],
+              borderWidth: 1,
+              borderColor: "#FFF", // White borders for segment separation
+              borderRadius: 4
+          }]
+      },
+      options: {
+        indexAxis: 'x',
+        responsive: true,
+        scales: {
+            x: {
+             grid: { display: false }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: "rgba(0,0,0,0.05)" }
+            }
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: (ctx) => {
+                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                        return  `${ctx.label}: ${ctx.raw} (${(ctx.raw/total*100).toFixed(1)}%)`;
+                    }
+                }
+            },
+            datalabels: {
+                anchor: 'end',
+                align: 'top',
+                color: function(ctx) {
+                     // Use white text for dark bars
+                    return [0, 3].includes(ctx.dataIndex) ? "white" : "#5A4A3A";
+                },
+                formatter: (value, ctx) => {
+                      const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                      return `${value} (${(value/total*100).toFixed(1)}%)`;
+                }
+            }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+  </script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+      const modalEl = document.getElementById('aiInsightModal');
+      const getInsightBtn = document.getElementById('getInsightBtn');
+
+      if (!modalEl || !getInsightBtn) return;
+
+      const modal = new bootstrap.Modal(modalEl);
+
+      getInsightBtn.addEventListener('click', function () {
+          {% if mock_mode %}
+              alert("Weekly insights not available in mock mode. Log in later to receive full analysis.");
+          {% else %}
+              modal.show();
+          {% endif %}
+      });
+
+      modalEl.addEventListener('shown.bs.modal', function () {
+          const closeButton = modalEl.querySelector('.btn-close');
+          if (closeButton) closeButton.focus();
+      });
+  });
+  </script>
+</body>
+</html>

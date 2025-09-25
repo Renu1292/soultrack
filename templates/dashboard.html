@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Hustle Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Flatpickr Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <style>
+        /* Flatpickr Calendar Theme (based on Orange #D16727) */
+        .flatpickr-calendar {
+            --fp-primary-color: #D16727;  /* Main orange */
+            --fp-secondary-color: #E58F5C;
+            --fp-hover-color: #F2D5C4;
+        }
+
+        /* Force styles (override Flatpickr defaults) */
+        .flatpickr-day.selected {
+            background: var(--fp-primary-color);
+            border-color: var(--fp-primary-color);
+            color: white;
+        }
+
+        #datefilter {
+            cursor: pointer;
+            background-color: #f5ede3;
+            border: 1px solid #E58F5C;
+            color: #333;
+            padding: 8px 12px;
+            border-radius: 4px;
+            width: 120px;
+        }
+
+        /* Background and Font */
+        body {
+            background: #FAF6F1;   /* Earthy base */
+            font-family: 'Quicksand', sans-serif;
+            padding: 2rem;
+            color: #724520;
+        }
+
+        /* Main Container */
+        .dashboard-container {
+            background: #ffffff;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* Buttons */
+        .btn-custom {
+            background-color: #D16727; /* burnt orange primary action */
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+        }
+
+        .btn-custom:hover {
+            background-color: #c25620;
+            transform: translateY(-2px)
+        }
+
+        .btn-outline-primary {
+             color: #724520;
+             border-color: #724520;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #724520;
+            color: white;
+        }
+
+         /* Table Styling */
+         .table th {
+            background-color: #eae2d6;
+            color: #9C7B61;
+         }
+
+         .table tbody tr {
+            background-color: #fff9f0; /* Soft tan */
+            transition: background-color 0.3s ease;
+         }
+
+        .table-hover tbody tr:hover {
+            background-color: #f5ede3;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #5A3E36;
+        }
+
+        /* Garden Image */
+        .plant-wrapper:hover . plant-img {
+            transform: scale(1.05);
+        }
+
+        .plant-img {
+            border-radius: 16px;
+            background-color: #fff4eb;
+            padding: 0.8rem;
+            box-shadow:  0 0 10px rgba(138, 45, 59, 0.15);
+        }
+
+
+        /* Headings and Section Titles */
+        .section-title;
+        h4,
+        h5 {
+            color: #822E2E;
+            font-weight:bold;
+        }
+
+        /* Table borders and cells */
+        .table th {
+            background-color: #f4e8dd;
+            color: #724520;
+        }
+
+        .table tbody tr {
+            background-color: #fff9f4;
+            transition: background-color 0.3s ease;
+        }
+
+        .progress-bar {
+            background-color: #D16727;
+            font-weight: bold;
+            font-size: 0.95rem;
+            text-align: center;
+        }
+
+        .goal-card {
+            border-left: 5px solid #5A3E36; /* deep brown card border */
+            background-color:  #fff4eb;  /*  Warmer card fill for goals */
+        }
+
+        .progress-bar-text {
+            font-size: 15px;  /* Relative to parent height (30px * 0.8 = ~24px) */
+            line-height: 35px; /* Vertically center text (matches progress bar height) */
+            font-weight: 600;  /* Semi-bold for better readability */
+            color: white;
+            text-align: center;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.2);  /* Improves text visibility */
+            transition: width 0.6s ease; /* Smooth width animation */
+        }
+
+        .progress-bar-text:hover {
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+
+        /* Floating badge animation */
+        @keyFrames float-up {
+            0% { transform: translate(-50%, 10px); opacity:0; }
+            100% { transform: translate(-50%, 0); opacity:1; }
+        }
+
+        /* Apply animation to badge */
+        .position-absolute {
+            animation: float-up 0.6s ease-out forwards;
+        }
+
+        /* Subtle 3D lift effect */
+        .position-absolute {
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 12px rgba(90, 62, 54, 0.1);
+        }
+
+        /* Gentle pulse animation */
+        @keyframes gentle-plus {
+            0% { transform: translate(-50%, 0) scale(1); }
+            50% { transform: translate(-50%, 0) scale(1.02); }
+            100% { transform: translate(-50%, 0) scale(1); }
+        }
+
+        /* Hover effects */
+        .position-absolute:hover {
+            animation: gentle-pulse 1.5s ease infinite;
+            border-color:  #D16727;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container container py-4">
+        <!-- Header Section -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+            <div>
+                <h2 class="fw-bold mb-1" style="color:#724520;">Welcome back, {{ name }} 👋</h2>
+                <p class="text-muted fs-5">Track your progress and stay motivated</p>
+            </div>
+            <div class="d-flex gap-2" >
+                <a href="{{ url_for('hustle') }}" class="btn btn-custom me-2"> ➕ Add Session</a>
+                <a href="{{ url_for('analysis') }}" class="btn btn-custom"> 📊 Analysis</a>
+                <a href="{{ url_for('login') }}" class="btn btn-custom">⚠️ Log Out</a>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="row g-4">
+             <!-- Hustle Garden Section -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm h-100" style="border-left:5px solid #5A3E36; background-color: #fff4eb;">
+                     <div class="card-body text-center py-4">
+                         <h2 class="fw-bold mb-2">🌼 Your Hustle Garden</h2>
+                         <p class="text-muted fs-5">Each day you hustle, your plant grows. Reach 7/7 to fully bloom!</p>
+                         <div class="position-relative d-flex justify-content-center align-items-center plant-wrapper"
+                              style="background: #f8e9d6; border-radius: 1rem; padding: 1rem; box-shadow: inset 0 0 10px rgba(0,0,0,0.05);">
+                              <img src="{{ url_for('static', filename= 'images/growing_' ~ stage ~ '.png') }}"
+                                 class="plant-img"
+                                 style="max-height:180px; transition: transform 0.4s ease;">
+                         </div>
+                         <div class="progress mt-3" style="height: 35px;">
+                            <div class="progress-bar progress-bar-text"
+                                 role="progressbar"
+                                 style="width: {{stage * 14.28 }}% ;background-color: #D16727;"
+                                 aria-valuenow="{{ stage }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="7">
+                                 {{ stage }} / 7 Days Logged
+                            </div>
+                        </div>
+                     </div>
+                </div>
+            </div>
+
+            <!-- Goal Section Card-->
+            <div class="col-lg-4">
+                <div class="card shadow h-100 p-3 goal-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                         <h4 class="card-text-label fs-4 mb-0">📝 Your Goal This Week</h4>
+                    </div>
+
+                    {% if goal_target %}
+                        <p class="display-6 fw-bold mt-3">{{ goal_target }} hrs</p>
+                        <p class="text-muted">
+                            {{ "✔️ Achieved!" if goal_achieved else "⏳ In Progress" }}</p>
+
+                        <!-- New Progress Bar -->
+                        <div class="progress mt-3" style="height: 35px;">
+                            <div class="progress-bar progress-bar-text"
+                                 role="progressbar"
+                                 style="width: {{ progress }}% ;background-color:#D16727;"
+                                 aria-valuenow="{{ progress }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                                 {{ total_hours }} / {{ goal_target }} hrs
+                            </div>
+                        </div>
+                        <!-- Floating Motivational Badge -->
+                        <div class="position-relative mt-4" style="min-height:70px;">
+                            <div class="position-absolute start-50 translate-middle-x rounded-3 py-2 px-4 shadow-lg text center"
+                                 style="bottom:0;
+                                        width: 96%;
+                                        max-width: 520px;
+                                        border: 2px solid #e6c7a8;
+                                        background: linear-gradient(to right, #fff9f2, #f8edd8);
+                                        transform-style: preserve-3d;">
+
+                                <span class="fw-bold"
+                                       style="font-size: 0.95rem;
+                                              color: #5A3E36;
+                                              letter-spacing: 0.3px;
+                                              text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+                                              line-height: 1.5;">
+
+                                    {% set quotes = [
+                                        "Motivation fades—discipline doesn’t care.",
+                                        "Your dreams don’t work unless you do. Period.",
+                                        "Goals without grind are just pretty lies.",
+                                        "Dreams are cute until you realize they demand your blood, sleep, and comfort.",
+                                        "You’re not behind because of bad luck—you’re behind because of bad habits.",
+                                        "Comfort is the enemy. Stay there, stay broke.",
+                                        "You’re not stuck. You’re just scared to level up.",
+                                        "You say 'one day' like time owes you something."
+                                    ] %}
+                                    {{ quotes|random }}
+                                </span>
+                            </div>
+                        </div>
+
+                    {% else %}
+                        <p class="mt-3 text-muted">No goal set for this week.</p>
+                        <a href="{{ url_for('set_goal') }}" class="btn btn-outline-primary btn-sm mt-2">Set Goal</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Confetti + CelebrationMessage -->
+            {% if goal_achieved %}
+            <div class="alert alert-success mt-3 text-center animate__animated animate__bounceIn">
+                 🎊🎊<strong>Congratulations!</strong> You crushed your goal! 🎊🎊
+            </div>
+            <script>
+                setTimeout(() => {
+                    confetti({
+                        particleCount: 150,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                        colors: ['#D16727', '#FFD700', '#2E8B57'],  //Orange, Gold, Green
+                    });
+                    setTimeout(() => confetti(), 500); // Second burst
+                }, 300);
+            </script>
+            {% endif %}
+    </div>
+        <!-- Hustle Log Table Section -->
+        <h5 class="section-title mt-5">📅 Your Logged Sessions</h5>
+
+        <!-- Date Filter & Reset UI -->
+        <div class="d-flex align-items-center mb-3">
+            <div class="me-2">
+                <input type="text" id="dateFilter" class="form-control form-control-sm" style="width:120px;"
+                       placeholder="Filter by date" value="{{ request.args.get('start') if request.args.get('start') }}" />
+            </div>
+            {% if request.args.get('start') %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+            {% endif %}
+        </div>
+
+        {% if entries %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle text-center">
+                    <thead class="text-uppercase small">
+                        <tr>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>Hours</th>
+                            <th>Mood</th>
+                            <th>Obstacles</th>
+                            <th>Lesson</th>
+                            <th>Action</th>
+                            <th>Options</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in entries %}
+                            <tr>
+                                <td>{{ entry.date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ entry.day }}</td>
+                                <td>{{ entry.hours }}</td>
+                                <td>{{ entry.mood }}</td>
+                                <td>{{ entry.obstacles }}</td>
+                                <td>{{ entry.lesson }}</td>
+                                <td>{{ entry.action }}</td>
+                                <td>
+                                    <!--  EDIT BUTTON -->
+                                    <a href="{{ url_for('edit', id=entry.id) }}" class="btn btn-sm btn-outline-primary">✏️ Edit</a>
+
+                                    <!--  DELETE FORM -->
+                                    <form method="POST" action="{{ url_for('delete', id=entry.id)}}" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this session?');">
+                                            🗑 Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted">No hustle logs yet.Time to hustle hard!💪</p>
+        {% endif %}
+    </div>
+    <!-- Load Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Script for date filter - Calendar -->
+    <script>
+        // Initialize the date picker on the input
+        flatpickr("#dateFilter", {
+            dateFormat: "Y-m-d",
+            maxDate: "today",
+            onChange: function(selectedDates, dateStr) {
+                if (dateStr) {
+                     // Redirect to dashboard route with query params
+                     window.location.href = `/dashboard?start=${dateStr}`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
