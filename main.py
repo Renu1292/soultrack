@@ -27,32 +27,34 @@ import traceback
 # STEP 1: Load environment variables
 load_dotenv()  # Loads from.env file
 
-# DEBUGGING
-# db_url = os.getenv('DATABASE_URL', '').strip('"')
-# print(f"Database URL: {db_url}")
-#
-# if db_url.startswith('sqlite:///'):
-#     db_path = db_url[10:]
-#     print(f"Database path: {db_path}")
-#     print(f"Directory exists: {os.path.exists(os.path.dirname(db_path))}")
-#     print(f"Full path exists: {os.path.exists(db_path)}")
-#
-#     # Check parent directory permissions
-#     parent_dir = os.path.dirname(db_path)
-#     if os.path.exists(parent_dir):
-#         test_file = os.path.join(parent_dir, 'test.txt')
-#         try:
-#             with open(test_file, 'w') as f:
-#                 f.write('test')
-#             print("Can write to directory:YES")
-#         except Exception as e:
-#             print(f"Can write to directory: NO - {e}")
-
 # STEP 2: Configure Flask
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
-app.config['SQLALCHEMY_DATABASE_URI']= os.getenv('DATABASE_URL')
+
+# DATABASE CONFIGURATION
+def get_database_url():
+    db_url = os.getenv('DATABASE_URL', '')
+
+    # Production on Render
+    if os.getenv('RENDER'):
+        if db_url and db_url.startswith('postgres://'):
+            db_url = db_url.replace('postgres://', 'postgresql://', 1)
+            print("🚀 Production: Using PostgreSQL")
+        return db_url
+
+    # Development
+    if not db_url:
+        db_url = 'sqlite:///users.db'
+    print("💻 Development: Using SQLite")
+    return db_url
+
+app.config['SQLALCHEMY_DATABASE_URI']= get_database_url()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disables warning
+
+print(f"✅ Database configured: {app.config['SQLALCHEMY_DATABASE_URI']}")
+
+# app.config['SQLALCHEMY_DATABASE_URI']= os.getenv('DATABASE_URL')
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disables warning
 
 # Ensure instance folder exists
 try:
